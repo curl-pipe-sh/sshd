@@ -11,9 +11,31 @@ user_homedir() {
   then
     echo "$USER_HOME"
     return 0
-  elif [ "$TARGET_USER" = "root" ]
+  fi
+
+  USER_HOME=$(awk -v u="$TARGET_USER" -v FS=':' '$1==u {print $6}' /etc/passwd)
+  if [ -n "$USER_HOME" ]
+  then
+    echo "$USER_HOME"
+    return 0
+  fi
+
+  USER_HOME=$(getent passwd "$TARGET_USER" | cut -d: -f6)
+  if [ -n "$USER_HOME" ]
+  then
+    echo "$USER_HOME"
+    return 0
+  fi
+
+  if [ "$TARGET_USER" = "root" ] && [ -d "/root" ]
   then
     echo "/root"
+    return 0
+  fi
+
+  if [ -d "/home/${TARGET_USER}" ]
+  then
+    echo "/home/${TARGET_USER}"
     return 0
   fi
 
